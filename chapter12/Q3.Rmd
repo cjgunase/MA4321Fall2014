@@ -1,0 +1,107 @@
+
+
+3.
+```{r,echo=FALSE}
+library(C50)
+library(caret)
+library(corrplot)
+data(churn)
+```
+
+a.
+```{r,echo=TRUE}
+dataset <-rbind(churnTrain,churnTest)
+# Remove Area code and state
+dataset<-dataset[,-c(1,3)]
+#create 1 | 0 for yes | no
+dataset[,2] <- as.factor(ifelse(dataset[,2]=="yes","1","0"))
+dataset[,3] <- as.factor(ifelse(dataset[,3]=="yes","1","0"))
+dataset[,18] <- as.factor(ifelse(dataset[,18]=="yes","1","0"))
+
+X <- dataset[,-18]
+
+#Check near Zero variance predictores
+nzro <- nearZeroVar(X)
+nzro
+X <-X[,-nzro]
+corrplot(cor(X[,-c(2,3)]),method="color")
+numerics <- X[,-c(2,3)]
+library(corrplot)
+M <- cor(numerics)
+corrplot(M, method = "color")
+numerics <- numerics[,-findCorrelation(cor(numerics))]
+#Removing high correlated predictors
+Y <-dataset[,18]
+barplot(table(Y))
+
+trainIndex <- createDataPartition(Y, p = .75,list = FALSE,times = 1)
+trainX <-numerics[trainIndex,]
+trainY <-Y[trainIndex]
+testX <- numerics[-trainIndex,]
+testY <- Y[-trainIndex]
+
+```
+
+b.
+
+```{r,echo=FALSE}
+ctrl <- trainControl(method = "LGOCV",
+                     summaryFunction = twoClassSummary,
+                     classProbs = TRUE,
+                     savePredictions = TRUE)
+
+library(caret)
+set.seed(476)
+glmModel <- train(trainX,y = trainY,method = "glm",metric = "ROC",trControl = ctrl,preProc = c("center", "scale"))
+glmModel
+
+glmPred <- predict(glmModel,testX)
+confusionMatrix(data=glmPred,reference = testY)
+
+```
+```{r,echo=FALSE}
+ldaModel<- train(x = trainX,y = trainY,method = "lda",metric = "ROC",trControl = ctrl,preProc = c("center", "scale"))
+ldaModel
+ldaPred <- predict(ldaModel,testX)
+confusionMatrix(data=ldaPred,reference = testY)
+```
+
+```{r,echo=FALSE}
+plsdaModel <- train(x = trainX,y = trainY,
+                                     method = "pls",
+                                     tuneGrid = expand.grid(.ncomp = 1:2),
+                                     preProc = c("center","scale"),
+                                     metric = "ROC",
+                                     trControl = ctrl)
+plsdaPred <- predict(plsdaModel,testX)
+confusionMatrix(data=plsdaPred,reference = testY)
+```
+
+```{r,echo=FALSE}
+glmnGrid <- expand.grid(.alpha = c(0, .1, .2, .4, .6, .8, 1),.lambda=seq(0.01,0.2,length=40))
+lmnTuned <- train(trainX,y = trainY,method = "glmnet",  tuneGrid = glmnGrid,metric = "ROC",trControl = ctrl,preProc = c("center", "scale"))
+lmnTuned
+lmnPred <- predict(lmnTuned,testX)
+confusionMatrix(data=lmnPred,reference = testY)
+```
+
+```{r,echo=FALSE}
+library(pamr)
+nscGrid <- data.frame(.threshold = 0:25)
+nscTuned <- train(x = trainX,
+                                       y = trainY,
+                                       method = "pam",
+                                       preProc = c("center", "scale"),
+                                       tuneGrid = nscGrid,
+                                       metric = "ROC",
+                                       trControl = ctrl)
+
+
+nscTuned
+nscPred <- predict(nscTuned,testX)
+confusionMatrix(data=nscPred,reference = testY)
+
+```
+
+
+

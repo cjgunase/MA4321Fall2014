@@ -1,0 +1,148 @@
+---
+title: "Ex4"
+author: "Chathura J Gunasekara"
+date: "Monday, September 29, 2014"
+output: pdf_document
+---
+1.a
+Classify music into six catagories
+12,495 music samples 191 predictors.
+
+
+In this situation, since the sample size is large it is possible to 
+set aside a testing data set and training data set.
+regardless of the artist, the underlying connection between songs, it is possible to
+catagorise the songs to different genres.
+since the data shows no large disproposion between the classes ,we can use simple random sample
+The response categories were not balanced
+(Fig. 1.1), with the smallest segment coming from the heavy metal category
+(7%) and the largest coming from the classical category (28%).
+do stratified random sampling. the random sampling occurs within each class and should preserve the overall class distribution of the data. 
+
+```{r,echo=TRUE}
+music<- read.csv("genresTrain.csv")
+attach(music)
+#b)
+library(AppliedPredictiveModeling)
+#summary(music)
+
+barplot(table(music[192]))
+
+#stratified sampling
+library(caret)
+#install.packages("proxy")
+library(proxy)
+set.seed(1);trainingRows <- createDataPartition(music$GENRE,p=0.80,list=FALSE)
+head(trainingRows)
+train_music<-music[trainingRows,]
+train_classes<-GENRE[trainingRows]
+test_music <-music[-trainingRows,]
+test_classes <- GENRE[-trainingRows]
+
+
+
+```
+Using maximum dissimilarity sampling in caret package. the data will be split on the basis of the predictor values.
+```{r, echo=TRUE}
+
+## A random sample of 5 data points
+startSet <- sample(1:dim(train_music)[1], 5)
+samplePool <- train_music[-startSet, ]
+start <- train_music[startSet, ]
+newSamp <- maxDissim(start, samplePool, n = 4)
+
+```
+4.2.a
+```{r,echo=TRUE}
+library(AppliedPredictiveModeling)
+data(permeability)
+per_data <-cbind(permeability,fingerprints)
+
+```
+This data set is small. so do do bootstrapping
+k fold cross validation
+repeated cross validation 
+is used.
+
+```{r,echo=TRUE}
+library(caret)
+set.seed(1)
+repeatSplits <-createDataPartition(permeability,p=0.8,times=3)
+str(repeatSplits)
+set.seed(1)
+cvSplits <-createFolds(permeability,k=10,returnTrain=TRUE)
+
+str(cvSplits)
+
+
+```
+
+
+4.3.
+This data set contains information about a chemical manufacturing process,
+in which the goal is to understand the relationship between the process and
+the resulting final product yield. Raw material in this process is put through
+a sequence of 27 steps to make the final pharmaceutical product. The starting
+material is generated from a biological unit and has a range of quality
+and characteristics. The objective in this project was to develop a model to
+predict percent yield of the manufacturing process. The data set consisted of
+177 samples of biological material for which 57 characteristics were measured.
+
+(a)A parsimonious model is a model that accomplishes a desired level of explanation or prediction with as few predictor variables as possible.
+THe "one standard error method"
+
+
+
+```{r,echo=TRUE}
+library(AppliedPredictiveModeling)
+data(ChemicalManufacturingProcess)
+Rsqared <- cbind((1:10),c(0.444,0.5,0.533,0.545,0.542,0.537,0.534,0.534,0.520,0.507))
+plot(Rsqared,xlab="Components",ylab="Resampled R-Squared")
+
+
+
+
+
+
+
+```
+Models with components 1 to 4 increase R squared. then after 4 it decreases becasue over fitting.
+Numercically optimal value is 0.545 its SD is 0.0308
+onestandar_error = 0.545-0.0308
+0
+.533 > 0.5142 which is within one standard deviation
+so 3 Components is enough to model.
+
+b)
+mean <- c(0.444,0.5,0.533,0.545,0.542,0.537,0.534,0.534,0.520,0.507)
+tol <- (mean-0.545)/0.545
+tol*100
+
+54.5-10
+44.5
+2 is the optimal number of PLS components.
+
+c)
+knn
+R Squared is between range and prediction time is less than SVM and Random forest. No much defferece in time when comaparing with other models.
+d)
+start with SVM,boosted trees
+investigate simpler models that are less opaqure 
+consider using the simlest model that reasonably approximates the performance of more complex methods.
+
+4.4
+```{r,echo=TRUE}
+library(caret)
+data(oil)
+str(oilType)
+table(oilType)
+```
+(a)
+```{r,echo=TRUE}
+sample(fattyAcids,7,replace=TRUE,prob=NULL )
+
+
+
+
+
+

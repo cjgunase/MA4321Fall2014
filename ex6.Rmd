@@ -1,0 +1,233 @@
+---
+title: "EX6"
+author: "Chathura J Gunasekara"
+date: "Thursday, October 16, 2014"
+output: word_document
+---
+1.
+a. Load the data
+
+```{r,echo=FALSE}
+rm(list = ls())
+library(caret)
+data(tecator)
+tecator <-as.data.frame(cbind(endpoints[,2],absorp))
+```
+
+b. Use PCA to determine the effective dimension of the data which is number of PCA Componenents. There are two PCA compnenets which is the effective dimention.
+
+```{r, echo=FALSE}
+print ("Using Scree Plot to check number of effective compents",quote = FALSE)
+
+screeplot(princomp(absorp),type="lines",main="Scree plot to check Principal Components")
+
+trans <- preProcess(as.matrix(absorp),method=c("center","scale", "pca"))
+PC <- predict(trans, absorp)
+head(PC)
+```
+c.Using the created 2 PCs a traing and testing set is created.
+```{r,echo=FALSE}
+newdata <-as.data.frame(cbind(endpoints[,2],PC))
+head(newdata)
+smp_size <- floor(0.75 * nrow(newdata))
+train_ind <- sample(seq_len(nrow(newdata)), size = smp_size)
+train <- newdata[train_ind, ]
+test <- newdata[-train_ind, ]
+
+```
+i. Ordinary Linear Regression
+```{r,echo=FALSE}
+PCAlmfit <-lm(V1~.,data=newdata)
+summary(PCAlmfit)
+print("Testing data",quote=FALSE)
+testlmfit <- data.frame(obs = test$V1, pred = predict(PCAlmfit,test))
+defaultSummary(testlmfit)
+```
+ii. Robust Linear Regresssion
+```{r,echo=FALSE}
+library(MASS)
+PCArlmfit <-rlm(V1~.,data=newdata)
+summary(PCArlmfit)
+print("Testing data",quote=FALSE)
+testrlmfit <- data.frame(obs = test$V1, pred = predict(PCArlmfit,test))
+defaultSummary(testrlmfit)
+```
+iii. Partial Least Squares
+```{r,echo=FALSE}
+library(pls)
+PCArplsrfit <-plsr(V1~.,data=train)
+summary(PCArplsrfit)
+print("Testing data",quote=FALSE)
+predict(PCArplsrfit, test[1:5,],ncomp=1:2)
+plsTune <- train(PC, endpoints[,2],method = "pls",tuneLength = 20,preProc = c("center", "scale"))
+plsTune
+print("Testing data",quote=FALSE)
+testplsfit <- data.frame(obs = test$V1, pred = predict(plsTune,test[,-1]))
+defaultSummary(testplsfit)
+
+```
+iv.ridge regresssion
+```{r,echo=FALSE}
+library(elasticnet)
+ridgeModel <- enet(x = as.matrix(train[,2:3]), y = train$V1,lambda = 0.001)
+ridgePred <- predict(ridgeModel, newx = as.matrix(test[,2:3]),s = 1, mode = "fraction",type = "fit")
+head(ridgePred$fit)
+
+
+library(caret)
+ridgeGrid <- data.frame(.lambda = seq(0, .1, length = 15))
+set.seed(100)
+ridgeRegFit <- train(train[,2:3], train$V1,method = "ridge",tuneGrid = ridgeGrid,preProc = c("center", "scale"))
+ridgeRegFit
+
+testridfit <- data.frame(obs = test$V1, pred = predict(ridgeRegFit,test[,-1]))
+defaultSummary(testridfit)
+
+
+```
+v.lasso model
+```{r,echo=FALSE}
+library(lars)
+object <- lars(x = as.matrix(train[,2:3]), y = train$V1,type="lasso")
+object
+### make predictions at the values in x, at each of the
+### steps produced in object
+fits <- predict.lars(object, newx = as.matrix(train[,2:3]),type="fit")
+fits
+#tuning parameters ?
+
+```
+vi. elastic net
+```{r,echo=FALSE}
+library(elasticnet)
+enetModel <- enet(x = as.matrix(train[,2:3]), y = train$V1,lambda = 0.01, normalize = TRUE)
+enetModel
+enetPredTrain <- predict(enetModel, newx = as.matrix(train[,2:3]),s = .1, mode = "fraction",type = "fit")
+trainenetFit <-data.frame(obs = train$V1, pred = enetPredTrain$fit)
+defaultSummary(trainenetFit)
+
+enetPredTest <- predict(enetModel, newx = as.matrix(test[,2:3]),s = .1, mode = "fraction",type = "fit")
+testenetfit <- data.frame(obs = test$V1, pred = enetPredTest$fit)
+defaultSummary(testenetfit)
+
+
+
+```
+(d)For this data set non of the models are siginificantly better or worse than others.A robust linear model with PCA should work because its interpretablity. 
+
+(e) Robust Linear model will be used because it is easier to implement and give higer R-squred values for the fit and lower RMSE for testing data.
+
+2.
+a.Loading data
+```{r,echo=FALSE}
+rm(list = ls())
+library(AppliedPredictiveModeling)
+data(permeability)
+```
+b. Remove the near zero variance predictors.
+```{r,echo=FALSE}
+library(caret)
+newfingerprints <- fingerprints[,-nearZeroVar(fingerprints)]
+ncol(newfingerprints)
+newfingerprints<-as.data.frame(newfingerprints)
+print("New Dimension of the fingerprint is:",quote = FALSE,max.levels = NULL)
+dim(newfingerprints)
+```
+c.Split the data and train a PLS model
+```{r,echo=FALSE}
+dataset <-as.data.frame(cbind(permeability,newfingerprints))
+smp_size <- floor(0.75 * nrow(dataset))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(dataset)), size = smp_size)
+train <- dataset[train_ind, ]
+test <- dataset[-train_ind, ]
+
+library(pls)
+plsFit <- plsr(permeability ~ ., data = train,preProc = c("center", "scale"))
+summary(plsFit)
+plot(RMSEP(plsFit), legendpos = "topright")
+
+```
+40 variables are optimal according the above graph as it will explain 91% of the variation in the data.
+
+```{r,echo=FALSE}
+plsTune <- train(train[,-1], train[,1],method = "pls",tuneLength = 6,preProc = c("center", "scale"))
+ plsTune
+```
+d.
+```{r,echo=FALSE}
+predTest <- predict(plsFit, test, ncomp=40)
+plsSum <- data.frame(obs = test$permeability, pred = predTest)
+```
+e.
+i.Apply robust liner model
+```{r,echo=FALSE}
+
+rlmPCA <- train(train[,-1], train[,1],method = "rlm",preProcess = "pca")
+rlmPCA
+
+```
+
+f.
+
+3.
+
+a.Load Data
+```{r,echo=FALSE}
+#rm(list = ls())
+library(AppliedPredictiveModeling)
+data(ChemicalManufacturingProcess)
+y<-ChemicalManufacturingProcess[,1]
+x<-ChemicalManufacturingProcess[,-1]
+
+```
+
+b.Impute missing values
+```{r,echo=FALSE}
+source("http://bioconductor.org/biocLite.R")
+biocLite("impute", suppressUpdates=TRUE)
+library(impute)
+
+x.imputed <- impute.knn(as.matrix(x), k=5)
+dataset <-cbind(y,x.imputed$data)
+
+```
+c.Split the data in to training and testing set. Train a PLS model
+```{r,echo=FALSE}
+smp_size <- floor(0.75 * nrow(dataset))
+train_ind <- sample(seq_len(nrow(dataset)), size = smp_size)
+train <- as.data.frame(dataset[train_ind, ])
+test <- as.data.frame(dataset[-train_ind, ])
+
+library(pls)
+plsFit <- plsr(y ~ ., data = train,preProc = c("center", "scale"))
+summary(plsFit)
+plot(RMSEP(plsFit), legendpos = "topright")
+```
+From the above figure 40 components have optimal RMSE.
+d.
+```{r,echo=FALSE}
+plsFitPred <- predict(plsFit,test,ncomp=40)
+plsSum <- data.frame(obs = test$y, pred = plsFitPred)
+```
+e.
+
+```{r,echo=FALSE}
+library(caret)
+plsImp <- varImp(plsFit,useModel=TRUE,scale=FALSE)
+plsImp
+
+```
+ManufacturingProcess variables dominate the list with higher weighted sums.
+
+
+f.
+```{r,echo=FALSE}
+dataset <- as.data.frame(dataset)
+plot(dataset$ManufacturingProcess36,dataset$y,ylab="yeild",xlab="ManufacturingProcess36")
+plot(dataset$ManufacturingProcess03,dataset$y,ylab="yeild",xlab="ManufacturingProcess03")
+
+```
+ManufacturingProcess36 has a high overall weight and when we plot yeild and ManufacturingProcess36 has a high correlation can be seen. But for ManufacturingProcess03 , it is low. So information about ManufacturingProcess36 is helpfull in improving the yeild.
+
+

@@ -1,0 +1,157 @@
+---
+title: "Ex12"
+author: "Chathrua Gunasekara"
+date: "November 29, 2014"
+output:
+  word_document:
+    fig_width: 4.5
+---
+
+
+Q3. 1. Data Exploration
+```{r,echo=FALSE}
+rm(list=ls())
+library(C50)
+library(caret)
+data(churn)
+dataset <-rbind(churnTrain,churnTest)
+X <- dataset[,-20]
+```
+Remove Near Zero Variance predictors
+
+```{r, echo=FALSE}
+nzro <- nearZeroVar(X)
+nzro
+X <-X[,-6]
+```
+Removed predictor V6 because the near zero variance.
+
+
+```{r, echo=FALSE}
+numerics <- X[,-c(1,3,4,5)]
+corrrelation <- cor(numerics)
+library(corrplot)
+corrplot(corrrelation, order = "hclust")
+numerics <- numerics[,-findCorrelation(cor(numerics))]
+
+prProc <- preProcess(numerics,method=c("center","scale"))
+X <- predict(prProc, numerics)
+Y <-dataset[,20]
+```
+Removed the catagorical predictors and high correlated numerical predictors.
+Then the data set was pre processed with "centering" and "scaling"
+
+```{r,echo=FALSE}
+barplot(table(Y))
+trainIndex <- createDataPartition(Y, p = .75,list = FALSE,times = 1)
+trainX <-X[trainIndex,]
+trainY <-Y[trainIndex]
+testX <- X[-trainIndex,]
+testY <- Y[-trainIndex]
+
+```
+The data set was splited to 75% training set and rest to testing set with stratified sampling beucase the class imbalance in the data set.
+
+2.Fitting models and evaluating the model using ROC. Kappa statistic is used because th class imbalance.
+```{r,echo=FALSE}
+ctrl <- trainControl(method = "LGOCV",
+                     summaryFunction = twoClassSummary,
+                     classProbs = TRUE,
+                     savePredictions = TRUE)
+```
+
+i. Logistic Regression classification model
+```{r,echo=FALSE}
+
+glmModel <- train(trainX,y = trainY,method = "glm",metric = "ROC",trControl = ctrl)
+glmModel
+
+glmPred <- predict(glmModel,testX)
+confusionMatrix(data=glmPred,reference = testY)
+Roc <- roc(response = glmModel$pred$obs,
+                                       predictor = glmModel$pred$yes,
+                                       levels = (levels(glmModel$pred$obs)))
+#plot(Roc, legacy.axes = TRUE)
+auc(Roc)
+predLda<-predict(glmModel,testX)
+confusionMatrix(data=predLda,reference = testY)
+
+```
+ii.Linear Discriminate Analysis
+```{r,echo=FALSE}
+ldaModel<- train(x = trainX,y = trainY,method = "lda",metric = "ROC",trControl = ctrl)
+ldaModel
+Roc <- roc(response = ldaModel$pred$obs,
+           predictor = ldaModel$pred$yes,
+           levels = (levels(ldaModel$pred$obs)))
+#plot(Roc, legacy.axes = TRUE)
+auc(Roc)
+
+predLda<-predict(ldaModel,testX)
+confusionMatrix(data=predLda,reference = testY)
+
+```
+iii. Partial Least Squrare Discriminate Analysis
+```{r,echo=FALSE}
+
+plsdaModel <- train(x = trainX,y = trainY,
+                                     method = "pls",
+                                     tuneGrid = expand.grid(.ncomp = 1:2),
+                                     #preProc = c("center","scale"),
+                                     metric = "ROC",
+                                     trControl = ctrl)
+plsdaModel
+
+
+Roc <- roc(response = plsdaModel$pred$obs,
+           predictor = plsdaModel$pred$yes,
+           levels = (levels(plsdaModel$pred$obs)))
+#plot(Roc, legacy.axes = TRUE)
+auc(Roc)
+
+predLda<-predict(plsdaModel,testX)
+confusionMatrix(data=predLda,reference = testY)
+
+plsImpGrant <- varImp(plsdaModel, scale = FALSE)
+plsImpGrant
+```
+iv. Penalized Models
+```{r,echo=FALSE}
+glmnGrid <- expand.grid(.alpha = c(0, .1 ),.lambda=seq(0.1,0.2,length=5))
+lmnTuned <- train(trainX,y = trainY,method = "glmnet",  tuneGrid = glmnGrid,metric = "ROC",trControl = ctrl)
+lmnTuned
+
+predLda<-predict(lmnTuned,testX)
+confusionMatrix(data=predLda,reference = testY)
+#Roc <- roc(response = lmnTuned$pred$obs,
+ #          predictor = lmnTuned$pred$yes,
+  #         levels = (levels(lmnTuned$pred$obs)))
+#plot(Roc, legacy.axes = TRUE)
+#auc(Roc)
+```
+
+
+v. Nearest Shrunken centroids Model
+```{r,echo=FALSE}
+library(pamr)
+nscGrid <- data.frame(.threshold = 0:25)
+nscTuned <- train(x = trainX,
+                                       y = trainY,
+                                       method = "pam",
+                                       #preProc = c("center", "scale"),
+                                       tuneGrid = nscGrid,
+                                       metric = "ROC",
+                                       trControl = ctrl)
+
+nscTuned
+predLda<-predict(nscTuned,testX)
+confusionMatrix(data=predLda,reference = testY)
+
+
+predictors(nscTuned)
+varImp(nscTuned, scale = FALSE)
+
+```
+
+
+

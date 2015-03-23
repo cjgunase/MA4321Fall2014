@@ -1,0 +1,188 @@
+---
+output: pdf_document
+---
+Title
+========================================================
+1.
+
+```{r}
+rm(list = ls())
+library(caret)
+data(tecator)
+endpoints<-as.data.frame(endpoints)
+names(endpoints) <- c("Y1","Y2","Y3")
+absorp <- as.data.frame(absorp)
+tecator <-cbind(endpoints$Y2,absorp)
+names(tecator)[1]<-"Y"
+screeplot(princomp(absorp),type="lines",main="Principal Components")
+
+```
+From the scree plot we can see Two componets is enough to capture the most of the variation. Using PCA to find the effective predictors
+
+```{r}
+trans <- preProcess.default(absorp,methods=c("pca"))
+trans
+transformed <-predict(trans,absorp)
+head(transformed[,1:5])
+trans = preProcess(as.matrix(absorp),method=c("center","scale", "pca"))
+PC = predict(trans, absorp)
+head(PC)
+#combin the data frame
+dataTrans <- cbind(endpoints$Y2,as.data.frame(PC))
+names(dataTrans)<-c("y","pc1","pc2")
+
+
+```
+c.
+```{r}
+smp_size <- floor(0.75 * nrow(dataTrans))
+train_ind <- sample(seq_len(nrow(dataTrans)), size = smp_size)
+train <- dataTrans[train_ind, ]
+test <- dataTrans[-train_ind, ]
+
+
+#lm
+lmFitPCA <- lm(y ~ ., data =train)
+summary(lmFitPCA)
+lmPred1 <- predict(lmFitPCA,test)
+lmValues1 <- data.frame(obs = test$y, pred = lmPred1)
+defaultSummary(lmValues1)
+#rlm
+library(MASS)
+rlmFitAllPredictors <- rlm( Y~ ., data = tecator[train_ind, ])
+summary(rlmFitAllPredictors)
+#--------------------------
+lmFitPCA <- rlm(y ~ ., data =train)
+summary(lmFitPCA)
+lmPred1 <- predict(lmFitPCA,test)
+lmValues1 <- data.frame(obs = test$y, pred = lmPred1)
+defaultSummary(lmValues1)
+
+
+#pls
+library(pls)
+plsFit <- plsr(Y ~ ., data = tecator[train_ind, ])
+plsFitpred<- predict(plsFit, tecator[-train_ind, ], ncomp = 1:2)
+plsValues1 <- data.frame(obs = test$y, pred = lmPred1)
+defaultSummary(plsValues1)
+
+
+
+
+```
+6.2.
+a.
+
+```{r}
+rm(list = ls())
+library(AppliedPredictiveModeling)
+data(permeability)
+
+```
+b.Remove the near zero variance predictors.
+```{r,echo=FALSE}
+library(caret)
+newfingerprints <- fingerprints[,-nearZeroVar(fingerprints)]
+ncol(newfingerprints)
+newfingerprints<-as.data.frame(newfingerprints)
+print("New Dimension of the fingerprint is:",quote = FALSE,max.levels = NULL)
+dim(newfingerprints)
+```
+c.
+```{r,echo=FALSE}
+dataset <-as.data.frame(cbind(permeability,newfingerprints))
+smp_size <- floor(0.75 * nrow(dataset))
+
+## set the seed to make your partition reproductible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(dataset)), size = smp_size)
+
+train <- dataset[train_ind, ]
+test <- dataset[-train_ind, ]
+
+library(pls)
+plsFit <- plsr(permeability ~ ., data = train,preProc = c("center", "scale"))
+summary(plsFit)
+plot(RMSEP(plsFit), legendpos = "topright")
+plsFit1 <- plsr(permeability ~ ., data = train, ncomp=2,,preProc = c("center", "scale"))
+summary(plsFit1)
+
+```
+
+d.
+Predict the response for the testset
+```{r,echo=FALSE}
+predict(plsFit, test[1:5,], ncomp = 1:2)
+library(caret)
+plsImp <- varImp(plsFit, useModel=pls, scale = FALSE)
+plsImp
+
+```
+e.
+```{r,echo=FALSE}
+library(elasticnet)
+ridgeModel <- enet(x = as.matrix(train[,-1]), y =train[,1] ,lambda = 0.001)
+summary(ridgeModel)
+ridgePred <- predict(ridgeModel, newx = as.matrix(test[,-1]),s = 1, mode = "fraction",type = "fit")
+head(ridgePred$fit)
+
+ridgeGrid <- data.frame(.lambda = seq(0, .1, length = 15))
+set.seed(100)
+library(caret)
+ridgeRegFit <- train(train[,-1], train[,1],method = "ridge",tuneGrid = ridgeGrid,trControl = ctrl,preProc = c("center", "scale"))
+ridgeRegFit
+```
+f.
+No, Sample size is small, so need more laboratory expreiments to collect sufficent amount of data.
+
+
+6.3
+a.
+```{r}
+rm(list = ls())
+library(AppliedPredictiveModeling)
+data(ChemicalManufacturingProcess)
+y<-ChemicalManufacturingProcess[,1]
+x<-ChemicalManufacturingProcess[,-1]
+
+```
+b.
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite("impute", suppressUpdates=TRUE)
+library(impute)
+
+x.imputed <- impute.knn(as.matrix(x), k=5)
+dataset <-cbind(y,x.imputed$data)
+
+smp_size <- floor(0.75 * nrow(dataset))
+train_ind <- sample(seq_len(nrow(dataset)), size = smp_size)
+train <- as.data.frame(dataset[train_ind, ])
+test <- as.data.frame(dataset[-train_ind, ])
+
+
+```
+c.
+```{r}
+
+
+ridgeModel <- enet(x = as.matrix(train[,-1]), y = train[,1],lambda = 0.001)
+summary(ridgeModel)
+```
+d.
+```{r,echo=FALSE}
+ridgePred <- predict(ridgeModel, newx = as.matrix(test[,-1]),s = 1, mode = "fraction",type = "fit")
+head(ridgePred$fit)
+
+
+ridgeGrid <- data.frame(.lambda = seq(0, .1, length = 15))
+set.seed(100)
+ctrl <- trainControl(method = "cv", number = 10)
+
+ridgeRegFit <- train(train[,-1], train[,1],method = "ridge",tuneGrid = ridgeGrid,trControl = ctrl,preProc = c("center", "scale"))
+ridgeRegFit
+```
+e.
+```{r,echo=FALSE}
+
+```

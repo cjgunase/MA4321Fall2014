@@ -1,0 +1,602 @@
+---
+title: "Ex7"
+author: "Chathura J Gunasekara"
+date: "10/31/2014"
+output:
+  pdf_document:
+    fig_height: 4
+    fig_width: 7
+---
+
+
+1).
+a).
+```{r,echo=FALSE,}
+
+set.seed(100)
+x <- runif(100, min = 2, max = 10)
+y <- sin(x) + rnorm(length(x)) * .25
+sinData <- data.frame(x = x, y = y)
+
+plot(x, y,pch=16,main="Scatter plot")
+## Create a grid of x values to use for prediction
+dataGrid <- data.frame(x = seq(2, 10, length = 100))
+
+library(kernlab)
+
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = "automatic",
+               C = 1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "red",lwd="3")
+
+print("##############################Cost Parameter##################################")
+plot(x, y,pch=16,main="C=0.01, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+                 kernel ="rbfdot", kpar = "automatic",
+                 C = 0.01, epsilon = 0.1,type='eps-svr')
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+ ## This is a matrix with one column. We can plot the
+ ## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "black",lwd="3")
+
+plot(x, y,pch=16,main="C=0.1, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = "automatic",
+               C = 0.1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "blue",lwd="3")
+
+
+plot(x, y,pch=16,main="C=10, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = "automatic",
+               C = 10, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "green",lwd="3")
+
+plot(x, y,pch=16,main="C=100, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = "automatic",
+               C = 100, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "orange",lwd="3")
+
+
+print("############################## Epsilon ##################################")
+
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+                 kernel ="rbfdot", kpar = "automatic",
+                 C = 1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+ ## This is a matrix with one column. We can plot the
+ ## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "red",lwd="3")
+
+plot(x, y,pch=16,main="C=1, epsilon=0.01")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+                 kernel ="rbfdot", kpar = "automatic",
+                 C = 1, epsilon = 0.01)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+ ## This is a matrix with one column. We can plot the
+ ## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "yellow",lwd="3")
+
+
+plot(x, y,pch=16,main="C=1, epsilon=1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+                 kernel ="rbfdot", kpar = "automatic",
+                 C = 1, epsilon = 1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+ ## This is a matrix with one column. We can plot the
+ ## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "blue",lwd="3")
+
+
+
+```
+b).
+
+```{r,echo=FALSE}
+print("############################## Sigma ##################################")
+plot(x, y,pch=16,main="C=1, epsilon=0.1,sigma=0.5")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = list(sigma=0.5),
+               C = 1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "red",lwd="3")
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1,sigma=1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = list(sigma=1),
+               C = 0.1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "blue",lwd="3")
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1,sigma=0.1")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = list(sigma=0.1),
+               C = 1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "blue",lwd="3")
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1,sigma=10")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = list(sigma=10),
+               C = 1, epsilon = 0.1)
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "green",lwd="3")
+
+plot(x, y,pch=16,main="C=1, epsilon=0.1,sigma=100")
+rbfSVM <- ksvm(x = x, y = y, data = sinData,
+               kernel ="rbfdot", kpar = list(sigma=100),
+               C = 1, epsilon = 0.1)
+
+modelPrediction <- predict(rbfSVM, newdata = dataGrid)
+## This is a matrix with one column. We can plot the
+## model predictions by adding points to the previous plot
+points(x = dataGrid$x, y = modelPrediction[,1],type = "l", col = "black",lwd="3")
+```
+
+epsilon determines how many data points will be used in the support vector to contribute to the regression line. the lower the epsilon many datapoints and higher the epsilon low data points to impact the prediction equatoin.
+
+epsilon high means number of support vectors are low to compute the model. so underfits
+when epsiln too low too many data points it over fits.
+
+sima parameter that controls the scale. string "automatic" which uses the heuristics in sigest to calculate a good sigma value for the Gaussian RBF
+
+high sigma overfits
+low sigma underfits
+
+The cost parameter is the main tool for adjusting the complexity of the
+model. When the cost is large, the model becomes very flexible since the
+effect of errors is amplified. When the cost is small, the model will “stiffen”
+and become less likely to over-fit (but more likely to underfit) because the
+contribution of the squared parameters is proportionally large in the modified
+error function.
+
+
+when cost is low model underfits the data and when cost is high model overfits the data.
+
+2.
+Knn
+```{r,echo=FALSE}
+rm(list = ls())
+library(mlbench)
+set.seed(200)
+trainingData <- mlbench.friedman1(200, sd = 1)
+## We convert the 'x' data from a matrix to a data frame
+## One reason is that this will give the columns names.
+trainingData$x <- data.frame(trainingData$x)
+ ## Look at the data using
+ #featurePlot(trainingData$x, trainingData$y)
+ ## or other methods.
+
+ ## This creates a list with a vector 'y' and a matrix
+ ## of predictors 'x'. Also simulate a large test set to
+ ## estimate the true error rate with good precision:
+ testData <- mlbench.friedman1(5000, sd = 1)
+ testData$x <- data.frame(testData$x)
+
+
+
+ library(caret)
+ knnModel <- train(x = trainingData$x,
+                     y = trainingData$y,
+                     method = "knn",
+                     preProc = c("center", "scale"),
+                     tuneLength = 10)
+ knnModel
+
+knnPred <- predict(knnModel, newdata = testData$x)
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = knnPred, obs = testData$y)
+
+```
+NN
+```{r,echo=FALSE}
+## The findCorrelation takes a correlation matrix and determines the
+# column numbers that should be removed to keep all pair-wise
+## correlations below a threshold
+tooHigh <- findCorrelation(cor(trainingData$x), cutoff = .75)
+head(tooHigh)
+## Create a specific candidate set of models to evaluate:
+nnetGrid <- expand.grid(.decay = c(0,0.1),.size = c(1:5),.bag = FALSE)
+
+nnetTune <- train(trainingData$x, trainingData$y,
+method = "avNNet",
+tuneGrid = nnetGrid,
+ ## Automatically standardize data prior to modeling
+ ## and prediction
+ preProc = c("center", "scale"),
+ linout = TRUE,
+ trace = FALSE,
+ MaxNWts = 10 * (ncol(trainingData$x) + 1) + 10 + 1,
+ maxit = 500)
+nnetTune
+
+nnetPred <- predict(nnetTune, newdata = testData$x)
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = nnetPred, obs = testData$y)
+```
+MARS
+```{r,echo=FALSE}
+library(earth)
+marsFit <- earth(trainingData$x, trainingData$y)
+marsFit
+```
+yes it selects the informative predictores
+
+```{r,echo=FALSE}
+ # Define the candidate models to test
+ marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:10)
+ # Fix the seed so that the results can be reproduced
+ set.seed(100)
+ marsTuned <- train(trainingData$x, trainingData$y,
+ method = "earth",
+ # Explicitly declare the candidate models to test
+ tuneGrid = marsGrid,
+ trControl = trainControl(method = "cv"))
+
+
+marsPred <- predict(marsTuned,newdata=testData$x)
+postResample(pred=marsPred,obs=testData$y)
+
+marsTuned
+varImp(marsTuned)
+
+```
+SVM
+
+```{r,echo=FALSE}
+ svmRTuned <- train(trainingData$x, trainingData$y,
+ method = "svmRadial",
+ preProc = c("center", "scale"),
+ tuneLength = 14,
+ trControl = trainControl(method = "cv"))
+
+svmRTuned
+svmRTuned$finalModel
+svmPred <- predict(svmRTuned,newdata=testData$x)
+postResample(pred=svmPred,obs=testData$y)
+
+```
+3.
+```{r,echo=FALSE}
+rm(list = ls())
+library(caret)
+data(tecator)
+dataset <-cbind(as.data.frame(endpoints[,2]),as.data.frame(absorp))
+names(dataset)[1]<-"Y"
+#Random sampling or pick .8 train .2 test ?
+train<-dataset[c(1:172),]
+test <-dataset[c(173:215),]
+
+
+ knnModel <- train(x = train[,-1],
+                     y = train[,1],
+                     method = "knn",
+                     preProc = c("center", "scale"),
+                     tuneLength = 10)
+ knnModel
+
+knnPred <- predict(knnModel, newdata = test[,-1])
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = knnPred, obs = test[,1])
+
+```
+NN
+```{r,echo=FALSE}
+rm(list = ls())
+library(caret)
+data(tecator)
+dataset <-cbind(as.data.frame(endpoints[,2]),as.data.frame(absorp))
+names(dataset)[1]<-"Y"
+
+correlations <- cor(dataset[,-1])
+library(corrplot)
+corrplot(correlations, order = "hclust")
+
+trans <- preProcess(dataset[,-1],method = c("BoxCox", "center", "scale", "pca"))
+trans
+# Apply the transformations:
+transformed <- predict(trans, dataset[,-1])
+# These values are different than the previous PCA components since
+# they were transformed prior to PCA
+head(transformed)
+## The findCorrelation takes a correlation matrix and determines the
+## column numbers that should be removed to keep all pair-wise
+## correlations below a threshold
+
+## Create a specific candidate set of models to evaluate:
+nnetGrid <- expand.grid(.decay = c(0,0.1),.size = c(1:5),.bag = FALSE)
+
+nnetTune <- train(transformed[1:172,], dataset[1:172,1],
+method = "avNNet",
+tuneGrid = nnetGrid,
+ ## Automatically standardize data prior to modeling
+ ## and prediction
+ #preProc = c("center", "scale"),
+ linout = TRUE,
+ trace = FALSE,
+ MaxNWts = 10 * (ncol(transformed) + 1) + 10 + 1,
+ maxit = 500)
+
+nnetTune
+
+nnetPred <- predict(nnetTune, newdata = transformed[173:215,])
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = nnetPred, obs = dataset[173:215,1])
+```
+MARS
+```{r,echo=FALSE}
+dim(dataset)
+library(earth)
+marsFit <- earth(dataset[1:172,-1], dataset[1:172,1])
+marsFit
+```
+yes it selects the informative predictores
+
+```{r,echo=FALSE}
+ # Define the candidate models to test
+ marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:100)
+ # Fix the seed so that the results can be reproduced
+ set.seed(100)
+ marsTuned <- train(dataset[1:172,-1], dataset[1:172,1],
+ method = "earth",
+ # Explicitly declare the candidate models to test
+ tuneGrid = marsGrid,
+ trControl = trainControl(method = "cv"))
+marsTuned$bestTune
+marsTuned
+
+marsPred <- predict(marsTuned,newdata=dataset[173:215,-1])
+postResample(pred=marsPred,obs=dataset[173:215,1])
+
+
+varImp(marsTuned)
+```
+SVM
+
+```{r,echo=FALSE}
+ svmRTuned <- train(dataset[1:172,-1], dataset[1:172,1],
+ method = "svmRadial",
+ preProc = c("center", "scale"),
+ tuneLength = 14,
+ trControl = trainControl(method = "cv"))
+
+svmRTuned
+svmRTuned$finalModel
+svmPred <- predict(svmRTuned,newdata=dataset[173:215,-1])
+postResample(pred=svmPred,obs=dataset[173:215,1])
+```
+4.
+a.
+```{r,echo=FALSE}
+rm(list=ls())
+library(AppliedPredictiveModeling)
+library(caret)
+data(permeability)
+fingerprints <-fingerprints[,-nearZeroVar(fingerprints)]
+dim(fingerprints)
+dataset <-cbind(as.data.frame(permeability),fingerprints)
+
+
+train<-dataset[c(1:132),]
+test <-dataset[c(133:165),]
+
+
+ knnModel <- train(x = train[,-1],
+                     y = train[,1],
+                     method = "knn",
+                     preProc = c("center", "scale"),
+                     tuneLength = 10)
+ knnModel
+
+knnPred <- predict(knnModel, newdata = test[,-1])
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = knnPred, obs = test[,1])
+
+```
+NN
+```{r,echo=FALSE}
+## The findCorrelation takes a correlation matrix and determines the
+## column numbers that should be removed to keep all pair-wise
+## correlations below a threshold
+tooHigh <- findCorrelation(cor(train[,-1]), cutoff = .5)
+head(tooHigh)
+filterdx<-train[,-1]
+y<-train[,1]
+
+filterdX<-filterdx[,-tooHigh]
+## Create a specific candidate set of models to evaluate:
+nnetGrid <- expand.grid(.decay = c(0,0.1,0.01),.size = c(1:5),.bag = FALSE)
+
+nnetTune <- train(filterdX, y,
+method = "avNNet",
+tuneGrid = nnetGrid,
+ ## Automatically standardize data prior to modeling
+ ## and prediction
+ preProc = c("center", "scale"),
+ linout = TRUE,
+ trace = FALSE,
+ MaxNWts = 10 * (ncol(filterdX) + 1) + 10 + 1,
+ maxit = 500)
+nnetTune
+nnetPred <- predict(nnetTune, newdata = test[,-1])
+postResample(pred = nnetPred, obs = test[,1])
+
+```
+MARS
+```{r,echo=FALSE}
+library(earth)
+marsFit <- earth(filterdX, train[,1])
+marsFit
+```
+yes it selects the informative predictores
+
+```{r,echo=FALSE}
+ # Define the candidate models to test
+ marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:29)
+ # Fix the seed so that the results can be reproduced
+ set.seed(100)
+ marsTuned <- train(filterdX, train[,1],
+ method = "earth",
+ # Explicitly declare the candidate models to test
+ tuneGrid = marsGrid,
+ trControl = trainControl(method = "cv"))
+
+
+marsPred <- predict(marsTuned,newdata=test[,-1])
+postResample(pred=marsPred,obs=test[,1])
+
+marsTuned
+varImp(marsTuned)
+```
+SVM
+
+```{r,echo=FALSE}
+ svmRTuned <- train(train[,-1], train[,1],
+ method = "svmRadial",
+ preProc = c("center", "scale"),
+ tuneLength = 14,
+ trControl = trainControl(method = "cv"))
+
+svmRTuned
+svmRTuned$finalModel
+svmPred <- predict(svmRTuned,newdata=test[,-1])
+postResample(pred=svmPred,obs=test[,1])
+```
+
+5.
+a.
+```{r,echo=FALSE}
+rm(list=ls())
+library(AppliedPredictiveModeling)
+data(ChemicalManufacturingProcess)
+y<-ChemicalManufacturingProcess[,1]
+x<-ChemicalManufacturingProcess[,-1]
+
+source("http://bioconductor.org/biocLite.R")
+biocLite("impute", suppressUpdates=TRUE)
+library(impute)
+
+x.imputed <- impute.knn(as.matrix(x), k=5)
+X <- as.data.frame(x.imputed$data)
+
+
+library(caret)
+
+
+dataset <-as.data.frame(y,x.imputed$data)
+smp_size <- floor(0.75 * nrow(dataset))
+train_ind <- sample(seq_len(nrow(dataset)), size = smp_size)
+train <- as.data.frame(dataset[train_ind, ])
+test <- as.data.frame(dataset[-train_ind, ])
+
+ knnModel <- train(x = train[,-1],
+                     y = train[,1],
+                     method = "knn",
+                     preProc = c("center", "scale"),
+                     tuneLength = 10)
+ knnModel
+
+knnPred <- predict(knnModel, newdata = test[,-1])
+ ## The function 'postResample' can be used to get the test set
+ ## perforamnce values
+postResample(pred = knnPred, obs = test[,1])
+
+```
+NN
+```{r,echo=FALSE}
+## The findCorrelation takes a correlation matrix and determines the
+## column numbers that should be removed to keep all pair-wise
+## correlations below a threshold
+tooHigh <- findCorrelation(cor(train[,-1]), cutoff = .5)
+head(tooHigh)
+filterdx<-train[,-1]
+y<-train[,1]
+
+filterdX<-filterdx[,-tooHigh]
+## Create a specific candidate set of models to evaluate:
+nnetGrid <- expand.grid(.decay = c(0,0.1,0.01),.size = c(1:5),.bag = FALSE)
+
+nnetTune <- train(filterdX, y,
+method = "avNNet",
+tuneGrid = nnetGrid,
+ ## Automatically standardize data prior to modeling
+ ## and prediction
+ preProc = c("center", "scale"),
+ linout = TRUE,
+ trace = FALSE,
+ MaxNWts = 10 * (ncol(filterdX) + 1) + 10 + 1,
+ maxit = 500)
+nnetTune
+nnetPred <- predict(nnetTune, newdata = test[,-1])
+postResample(pred = nnetPred, obs = test[,1])
+
+```
+MARS
+```{r,echo=FALSE}
+library(earth)
+marsFit <- earth(filterdX, train[,1])
+marsFit
+```
+yes it selects the informative predictores
+
+```{r,echo=FALSE}
+ # Define the candidate models to test
+ marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:29)
+ # Fix the seed so that the results can be reproduced
+ set.seed(100)
+ marsTuned <- train(filterdX, train[,1],
+ method = "earth",
+ # Explicitly declare the candidate models to test
+ tuneGrid = marsGrid,
+ trControl = trainControl(method = "cv"))
+
+
+marsPred <- predict(marsTuned,newdata=test[,-1])
+postResample(pred=marsPred,obs=test[,1])
+
+marsTuned
+varImp(marsTuned)
+```
+SVM
+
+```{r,echo=FALSE}
+ svmRTuned <- train(train[,-1], train[,1],
+ method = "svmRadial",
+ preProc = c("center", "scale"),
+ tuneLength = 14,
+ trControl = trainControl(method = "cv"))
+
+svmRTuned
+svmRTuned$finalModel
+svmPred <- predict(svmRTuned,newdata=test[,-1])
+postResample(pred=svmPred,obs=test[,1])
